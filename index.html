@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Enabled Supply Chains: A First-Principles Journey — Nilesh Sharma</title>
+  <meta name="description" content="An interactive visual guide to AI-enabled supply chain innovations for Southeast Asian and Middle Eastern retail, explained using Feynman's first-principles thinking." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f7f4f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .header h1 {
+      font-size: clamp(14px, 2.2vw, 20px);
+      font-weight: 700;
+      color: #2d2d2d;
+      letter-spacing: -0.3px;
+    }
+    .header p {
+      font-size: clamp(11px, 1.4vw, 14px);
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* Slide container */
+    .slideshow {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Slide image wrapper — 16:9 aspect ratio */
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Click zones — left half goes back, right half goes forward */
+    .click-zone {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .click-zone.prev { left: 0; }
+    .click-zone.next { right: 0; }
+
+    /* Arrow overlays */
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.85);
+      border: none;
+      border-radius: 50%;
+      width: clamp(36px, 5vw, 52px);
+      height: clamp(36px, 5vw, 52px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      transition: background 0.2s, transform 0.2s, opacity 0.3s;
+      z-index: 20;
+      opacity: 0.7;
+    }
+    .arrow:hover { background: #fff; transform: translateY(-50%) scale(1.1); opacity: 1; }
+    .arrow.prev { left: 14px; }
+    .arrow.next { right: 14px; }
+    .arrow svg { width: 22px; height: 22px; fill: #444; }
+    .arrow.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+
+    /* Progress bar */
+    .progress-bar-track {
+      height: 4px;
+      background: #e8e4df;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FFB3A7, #A8D8D8);
+      transition: width 0.4s ease;
+    }
+
+    /* Controls row */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: #fff;
+      border-top: 1px solid #f0ece8;
+    }
+
+    /* Dot indicators */
+    .dots {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      border: none;
+      padding: 0;
+    }
+    .dot.active {
+      background: #FFB3A7;
+      transform: scale(1.3);
+    }
+    .dot:hover:not(.active) { background: #bbb; }
+
+    /* Slide counter */
+    .counter {
+      font-size: 13px;
+      color: #aaa;
+      font-weight: 500;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* Slide title label */
+    .slide-label {
+      font-size: clamp(11px, 1.5vw, 13px);
+      color: #888;
+      flex: 1;
+      text-align: center;
+      padding: 0 12px;
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Keyboard hint */
+    .hint {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #bbb;
+      text-align: center;
+    }
+    .hint kbd {
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Footer credit */
+    .credit {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #bbb;
+      text-align: center;
+    }
+    .credit a { color: #A8D8D8; text-decoration: none; }
+    .credit a:hover { text-decoration: underline; }
+
+    /* Touch swipe support */
+    @media (hover: none) {
+      .arrow { opacity: 0.85; }
+      .hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>AI-Enabled Supply Chains: A First-Principles Journey</h1>
+    <p>Southeast Asia &amp; Middle East Retail — by Nilesh Sharma</p>
+  </div>
+
+  <div class="slideshow" id="slideshow">
+
+    <!-- Progress bar -->
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Slide image area -->
+    <div class="slide-wrapper" id="slideWrapper">
+
+      <div class="slide active" data-index="0">
+        <img src="images/slide1.png" alt="Why Does Your Supply Chain Keep Breaking?" loading="eager" />
+      </div>
+      <div class="slide" data-index="1">
+        <img src="images/slide2.png" alt="The Root Cause: Supply Chains Are Built for Yesterday's World" loading="lazy" />
+      </div>
+      <div class="slide" data-index="2">
+        <img src="images/slide3.png" alt="AI Is Not Magic. It Does Three Things." loading="lazy" />
+      </div>
+      <div class="slide" data-index="3">
+        <img src="images/slide4.png" alt="From Theory to Results: Where AI Is Winning in Regional Retail" loading="lazy" />
+      </div>
+      <div class="slide" data-index="4">
+        <img src="images/slide5.png" alt="How to Start: A 4-Step First-Principles Implementation Journey" loading="lazy" />
+      </div>
+
+      <!-- Click zones -->
+      <div class="click-zone prev" id="clickPrev" title="Previous slide"></div>
+      <div class="click-zone next" id="clickNext" title="Next slide"></div>
+
+      <!-- Arrow buttons -->
+      <button class="arrow prev disabled" id="btnPrev" aria-label="Previous slide">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <button class="arrow next" id="btnNext" aria-label="Next slide">
+        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+
+    </div><!-- /.slide-wrapper -->
+
+    <!-- Controls row -->
+    <div class="controls">
+      <div class="dots" id="dots"></div>
+      <span class="slide-label" id="slideLabel"></span>
+      <span class="counter" id="counter"></span>
+    </div>
+
+  </div><!-- /.slideshow -->
+
+  <p class="hint">
+    Click slide to advance &nbsp;|&nbsp; <kbd>←</kbd> <kbd>→</kbd> arrow keys &nbsp;|&nbsp; swipe on mobile
+  </p>
+
+  <p class="credit">
+    Read the full article at <a href="https://nileshsharma.com" target="_blank" rel="noopener">nileshsharma.com</a>
+  </p>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const clickPrev = document.getElementById('clickPrev');
+    const clickNext = document.getElementById('clickNext');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const slideLabel = document.getElementById('slideLabel');
+    const progressFill = document.getElementById('progressFill');
+
+    const labels = [
+      'Why Does Your Supply Chain Keep Breaking?',
+      'The Root Cause: Supply Chains Are Built for Yesterday\'s World',
+      'AI Is Not Magic. It Does Three Things.',
+      'From Theory to Results: Where AI Is Winning',
+      'How to Start: A 4-Step Implementation Journey',
+    ];
+
+    let current = 0;
+    const total = slides.length;
+
+    // Build dots
+    labels.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.addEventListener('click', () => goTo(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    function goTo(index) {
+      if (index < 0 || index >= total) return;
+      slides[current].classList.remove('active');
+      dotsContainer.children[current].classList.remove('active');
+      current = index;
+      slides[current].classList.add('active');
+      dotsContainer.children[current].classList.add('active');
+      updateUI();
+    }
+
+    function updateUI() {
+      counter.textContent = `${current + 1} / ${total}`;
+      slideLabel.textContent = labels[current];
+      progressFill.style.width = `${((current + 1) / total) * 100}%`;
+
+      btnPrev.classList.toggle('disabled', current === 0);
+      btnNext.classList.toggle('disabled', current === total - 1);
+      clickPrev.style.cursor = current === 0 ? 'default' : 'pointer';
+      clickNext.style.cursor = current === total - 1 ? 'default' : 'pointer';
+    }
+
+    // Button clicks
+    btnPrev.addEventListener('click', () => goTo(current - 1));
+    btnNext.addEventListener('click', () => goTo(current + 1));
+    clickPrev.addEventListener('click', () => goTo(current - 1));
+    clickNext.addEventListener('click', () => goTo(current + 1));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+    });
+
+    // Touch / swipe support
+    let touchStartX = 0;
+    const sw = document.getElementById('slideshow');
+    sw.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+    sw.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) dx < 0 ? goTo(current + 1) : goTo(current - 1);
+    }, { passive: true });
+
+    // Init
+    updateUI();
+  </script>
+
+</body>
+</html>
